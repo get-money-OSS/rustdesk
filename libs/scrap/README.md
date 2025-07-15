@@ -1,29 +1,29 @@
-Derived from https://github.com/quadrupleslap/scrap
+衍生自 https://github.com/quadrupleslap/scrap
 
 # scrap
 
-Scrap records your screen! At least it does if you're on Windows, macOS, or Linux.
+Scrap 录制你的屏幕！至少在 Windows、macOS 或 Linux 上可以。
 
-## Usage
+## 使用方法
 
 ```toml
 [dependencies]
 scrap = "0.5"
 ```
 
-Its API is as simple as it gets!
+它的 API 非常简单！
 
 ```rust
-struct Display; /// A screen.
-struct Frame; /// An array of the pixels that were on-screen.
-struct Capturer; /// A recording instance.
+struct Display; /// 一个屏幕。
+struct Frame; /// 屏幕上像素的数组。
+struct Capturer; /// 一个录制实例。
 
 impl Capturer {
-    /// Begin recording.
+    /// 开始录制。
     pub fn new(display: Display) -> io::Result<Capturer>;
 
-    /// Try to get a frame.
-    /// Returns WouldBlock if it's not ready yet.
+    /// 尝试获取一帧。
+    /// 如果还没准备好则返回 WouldBlock。
     pub fn frame<'a>(&'a mut self) -> io::Result<Frame<'a>>;
 
     pub fn width(&self) -> usize;
@@ -31,10 +31,10 @@ impl Capturer {
 }
 
 impl Display {
-    /// The primary screen.
+    /// 主屏幕。
     pub fn primary() -> io::Result<Display>;
 
-    /// All the screens.
+    /// 所有屏幕。
     pub fn all() -> io::Result<Vec<Display>>;
 
     pub fn width(&self) -> usize;
@@ -42,20 +42,20 @@ impl Display {
 }
 
 impl<'a> ops::Deref for Frame<'a> {
-    /// A frame is just an array of bytes.
+    /// 一帧就是一个字节数组。
     type Target = [u8];
 }
 ```
 
-## The Frame Format
+## 帧格式
 
-- The frame format is guaranteed to be **packed BGRA**.
-- The width and height are guaranteed to remain constant.
-- The stride might be greater than the width, and it may also vary between frames.
+- 帧格式保证是 **打包的 BGRA**。
+- 宽度和高度保证保持不变。
+- 步长可能大于宽度，也可能在帧之间变化。
 
-## System Requirements
+## 系统要求
 
-OS      | Minimum Requirements
+操作系统      | 最低要求
 --------|---------------------
 macOS   | macOS 10.8
 Linux   | XCB + SHM + RandR

@@ -1,77 +1,77 @@
 # clipboard
 
-Copy files and text through network.
-Main lowlevel logic from [FreeRDP](https://github.com/FreeRDP/FreeRDP).
+通过网络复制文件和文本。
+主要底层逻辑来自 [FreeRDP](https://github.com/FreeRDP/FreeRDP)。
 
-To enjoy file copy and paste feature on Linux/OSX,
-please build with `unix-file-copy-paste` feature.
+要在 Linux/OSX 上使用文件复制和粘贴功能，
+请使用 `unix-file-copy-paste` 特性构建。
 
-TODO: Move this lib to a separate project.
+TODO: 将此库移动到单独的项目中。
 
-## How it works
+## 工作原理
 
-Terminalogies:
+术语：
 
-- cliprdr: this module
-- local: the endpoint which initiates a file copy events
-- remote: the endpoint which paste the file copied from `local`
+- cliprdr: 此模块
+- local: 发起文件复制事件的端点
+- remote: 粘贴从 `local` 复制的文件的端点
 
-The main algorithm of copying and pasting files is from
-[Remote Desktop Protocol: Clipboard Virtual Channel Extension](https://winprotocoldoc.blob.core.windows.net/productionwindowsarchives/MS-RDPECLIP/%5bMS-RDPECLIP%5d.pdf),
-and could be concluded as:
+复制和粘贴文件的主要算法来自
+[Remote Desktop Protocol: Clipboard Virtual Channel Extension](https://winprotocoldoc.blob.core.windows.net/productionwindowsarchives/MS-RDPECLIP/%5bMS-RDPECLIP%5d.pdf)，
+可以总结为：
 
-0. local and remote notify each other that it's ready.
-1. local subscribes/listening to the system's clipboard for file copy
-2. local once got file copy event, notice the remote
-3. remote confirms receive and try pulls the file list
-4. local updates its file-list, the remote flushes pulled file list to the clipboard
-5. remote OS or desktop manager initiates a paste, making other programs reading
-   clipboard files. Convert those reading requests to RPCs
+0. local 和 remote 相互通知已准备就绪。
+1. local 订阅/监听系统剪贴板的文件复制事件
+2. local 一旦收到文件复制事件，通知 remote
+3. remote 确认接收并尝试拉取文件列表
+4. local 更新其文件列表，remote 将拉取的文件列表刷新到剪贴板
+5. remote 操作系统或桌面管理器发起粘贴操作，使其他程序读取
+   剪贴板文件。将这些读取请求转换为 RPC
 
-   - on Windows, all file reading will go through the stream file API
-   - on Linux/OSX, FUSE is used for converting reading requests to RPCs
-     - in case of local clipboard been transferred back
-       and leading to a dead loop,
-       all file copy event pointing at the FUSE directory will be ignored
+   - 在 Windows 上，所有文件读取都将通过流文件 API 进行
+   - 在 Linux/OSX 上，使用 FUSE 将读取请求转换为 RPC
+     - 为了防止本地剪贴板被传输回来
+       导致死循环，
+       所有指向 FUSE 目录的文件复制事件都将被忽略
 
-6. finishing pasting all files one by one.
+6. 逐个完成所有文件的粘贴。
 
-In a perspective of network data transferring:
+从网络数据传输的角度来看：
 
 ```mermaid
 sequenceDiagram
     participant l as Local
     participant r as Remote
-    note over l, r: Initialize
-    l ->> r: Monitor Ready
-    r ->> l: Monitor Ready
-    loop Get clipboard update
-        l ->> r: Format List (I got update)
-        r ->> l: Format List Response (notified)
-        r ->> l: Format Data Request (requests file list)
+    note over l, r: 初始化
+    l ->> r: 监视器就绪
+    r ->> l: 监视器就绪
+    loop 获取剪贴板更新
+        l ->> r: 格式列表（我收到了更新）
+        r ->> l: 格式列表响应（已通知）
+        r ->> l: 格式数据请求（请求文件列表）
         activate l
-            note left of l: Retrive file list from system clipboard
-            l ->> r: Format Data Response (containing file list)
+            note left of l: 从系统剪贴板检索文件列表
+            l ->> r: 格式数据响应（包含文件列表）
         deactivate l
-        note over r: Update system clipboard with received file list
+        note over r: 使用接收到的文件列表更新系统剪贴板
     end
-    loop Some application requests copied files
-        note right of r: application reads file from x to x+y
-        note over r: the file is the a-th file on list
-        r ->> l: File Contents Request (read file a offset x size y)
+    loop 某些应用程序请求复制的文件
+        note right of r: 应用程序从 x 读取文件到 x+y
+        note over r: 该文件是列表中的第 a 个文件
+        r ->> l: 文件内容请求（读取文件 a 偏移 x 大小 y）
         activate l
-            note left of l: Find a-th file on list, read from x to x+y
-            l ->> r: File Contents Response (contents of file a offset x size y)
+            note left of l: 在列表中找到第 a 个文件，从 x 读取到 x+y
+            l ->> r: 文件内容响应（文件 a 偏移 x 大小 y 的内容）
         deactivate l
     end
 ```
 
-Note: In actual implementation, both sides could play send clipboard update
-and request file contents.
-There is no such limitation that only local can update clipboard
-and copy files to remote.
+注意：在实际实现中，双方都可以发送剪贴板更新
+和请求文件内容。
+没有限制只有 local 可以更新剪贴板
+并将文件复制到 remote。
 
-## impl
+## 实现
 
 ### windows
 
@@ -81,61 +81,61 @@ and copy files to remote.
 
 ![B1->A1](./docs/assets/win_B_A.png)
 
-The protocol was originally designed as an extension of the Windows RDP,
-so the specific message packages fits windows well.
+该协议最初设计为 Windows RDP 的扩展，
+因此特定的消息包很适合 Windows。
 
-When starting cliprdr, a thread is spawn to create a invisible window
-and to subscribe to OLE clipboard events.
-The window's callback (see `cliprdr_proc` in `src/windows/wf_cliprdr.c`) was
-set to handle a variaty of events.
+启动 cliprdr 时，会生成一个线程来创建一个不可见的窗口
+并订阅 OLE 剪贴板事件。
+窗口的回调函数（参见 `src/windows/wf_cliprdr.c` 中的 `cliprdr_proc`）
+被设置为处理各种事件。
 
-Detailed implementation is shown in pictures above.
+详细实现如上图所示。
 
 ### Linux/OSX
 
-The Cliprdr Server implementation has mainly 3 parts:
+Cliprdr Server 实现主要有 3 个部分：
 
-- Clipboard Client
-- Local File list
-- FUSE server
+- 剪贴板客户端
+- 本地文件列表
+- FUSE 服务器
 
-#### Clipboard Client
+#### 剪贴板客户端
 
-The clipboard client has a thread polling for file urls on clipboard.
+剪贴板客户端有一个线程轮询剪贴板上的文件 URL。
 
-If the client found any updates of file urls,
-after filtering out those pointing to our FUSE directory or duplicated,
-send format list directly to remote.
+如果客户端发现任何文件 URL 的更新，
+在过滤掉指向我们 FUSE 目录或重复的文件后，
+直接向 remote 发送格式列表。
 
-The cliprdr server also uses clipboard client for setting clipboard,
-or retrive paths from system.
+cliprdr 服务器还使用剪贴板客户端来设置剪贴板，
+或从系统检索路径。
 
-#### Local File List
+#### 本地文件列表
 
-The local file list is a temperary list of file metadata.
-When receiving file contents PDU from peer, the server picks
-out the file requested and open it for reading if necessary.
+本地文件列表是文件元数据的临时列表。
+当接收到来自对端的文件内容 PDU 时，服务器会选择
+所请求的文件并在必要时打开它进行读取。
 
-Also when receiving Format Data Request PDU from remote asking for file list,
-the local file list should be rebuilt from file list retrieved from Clipboard Client.
+同样，当接收到来自 remote 的格式数据请求 PDU 询问文件列表时，
+本地文件列表应该从剪贴板客户端检索的文件列表重建。
 
-Some caching and preloading could done on it since applications are likely to read
-on the list sequentially.
+可以对其进行一些缓存和预加载，因为应用程序很可能会
+按顺序读取列表。
 
-#### FUSE server
+#### FUSE 服务器
 
-The FUSE server could convert POSIX file reading request to File Contents
-Request/Response RPCs.
+FUSE 服务器可以将 POSIX 文件读取请求转换为文件内容
+请求/响应 RPC。
 
-When received file list from remote,
-the FUSE server will figure out the file system tree and rearrange its content.
+当接收到来自 remote 的文件列表时，
+FUSE 服务器会计算出文件系统树并重新排列其内容。
 
-#### Groceries
+#### 杂项
 
-- The protocol was originally implemented for windows,
-  so paths in PDU will all be converted to DOS formats in UTF-16 LE encoding,
-  and datetimes will be converted to LDAP timestamp instead of
-  unix timestamp
+- 该协议最初为 Windows 实现，
+  因此 PDU 中的路径都将转换为 UTF-16 LE 编码的 DOS 格式，
+  日期时间将转换为 LDAP 时间戳而不是
+  Unix 时间戳
 
   ```text
   UNIX
@@ -145,17 +145,17 @@ the FUSE server will figure out the file system tree and rearrange its content.
   \usr\bin\rustdesk
   ```
 
-- To better fit for preserving permissions on unix-like platforms,
-  a reserved area of FileDescriptor PDU
+- 为了更好地适应在类 Unix 平台上保留权限，
+  FileDescriptor PDU 的保留区域
 
-- you may notice
-  the mountpoint is still occupied after the application quits.
-  That's because the FUSE server was not mounted with `AUTO_UNMOUNT`.
-  - It's hard to implement gressful shutdown for a multi-processed program
-  - `AUTO_UNMOUNT` was not enabled by default and requires enable
-    `user_allow_other` in configure. Letting users edit such global
-    configuration to use this feature might not be a good idea.
-  - use [`umount()`](https://man7.org/linux/man-pages/man2/umount.2.html)
-    syscall to unmount will also require that option.
-  - we currently directly call [`umount`](https://man7.org/linux/man-pages/man8/umount.8.html)
-    program to unmount dangling FUSE server. It worked perfectly for now.
+- 您可能会注意到
+  应用程序退出后挂载点仍然被占用。
+  这是因为 FUSE 服务器未使用 `AUTO_UNMOUNT` 挂载。
+  - 很难为多进程程序实现优雅关闭
+  - `AUTO_UNMOUNT` 默认未启用，需要在配置中启用
+    `user_allow_other`。让用户编辑此类全局
+    配置来使用此功能可能不是一个好主意。
+  - 使用 [`umount()`](https://man7.org/linux/man-pages/man2/umount.2.html)
+    系统调用卸载也需要该选项。
+  - 我们目前直接调用 [`umount`](https://man7.org/linux/man-pages/man8/umount.8.html)
+    程序来卸载悬挂的 FUSE 服务器。目前运行良好。

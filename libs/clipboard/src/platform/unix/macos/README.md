@@ -1,25 +1,25 @@
-# File pate on macOS
+# macOS 上的文件粘贴
 
-MacOS cannot use `fuse` because of [macfuse is not supported by default](https://github.com/macfuse/macfuse/wiki/Getting-Started#enabling-support-for-third-party-kernel-extensions-apple-silicon-macs).
+macOS 无法使用 `fuse`，因为 [macfuse 默认不支持](https://github.com/macfuse/macfuse/wiki/Getting-Started#enabling-support-for-third-party-kernel-extensions-apple-silicon-macs)。
 
-1. Use a temporary file `/tmp/rustdesk_<uuid>` as a placeholder in the pasteboard.
-2. Uses `fsevent` to observe files paste operation. Then perform pasting files.
+1. 使用临时文件 `/tmp/rustdesk_<uuid>` 作为粘贴板中的占位符。
+2. 使用 `fsevent` 观察文件粘贴操作。然后执行粘贴文件。
 
-## Files
+## 文件
 
 ### `pasteboard_context.rs`
 
-The context manager of the paste operations.
+粘贴操作的上下文管理器。
 
 ### `item_data_provider.rs`
 
-1. Set pasteboard item.
-2. Create temp file in `/tmp/.rustdesk_*`.
+1. 设置粘贴板项目。
+2. 在 `/tmp/.rustdesk_*` 中创建临时文件。
 
 ### `paste_observer.rs`
 
-Use `fsevent` to observe the paste operation with the source file `/tmp/.rustdesk_*`.
+使用 `fsevent` 观察源文件 `/tmp/.rustdesk_*` 的粘贴操作。
 
 ### `paste_task.rs`
 
-Perform the paste.
+执行粘贴。

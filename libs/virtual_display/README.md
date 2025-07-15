@@ -1,3 +1,3 @@
-# virtual display
+# 虚拟显示器
 
-[doc](./dylib/README.md)
+[文档](./dylib/README.md)

@@ -1,31 +1,31 @@
-# virtual display
+# 虚拟显示器
 
-Virtual display may be used on computers that do not have a monitor.
+虚拟显示器可用于没有显示器的计算机。
 
-[Development reference](https://github.com/pavlobu/deskreen/discussions/86)
+[开发参考](https://github.com/pavlobu/deskreen/discussions/86)
 
-## windows
+## Windows
 
-### win10
+### Win10
 
-Win10 provides [Indirect Display Driver Model](https://msdn.microsoft.com/en-us/library/windows/hardware/mt761968(v=vs.85).aspx).
+Win10 提供了 [间接显示驱动模型](https://msdn.microsoft.com/en-us/library/windows/hardware/mt761968(v=vs.85).aspx)。
 
-This lib uses [this project](https://github.com/rustdesk-org/RustDeskIddDriver) as the driver.
-
-
-**NOTE**: Versions before Win10 1607. Try follow [this method](https://github.com/fanxiushu/xdisp_virt/tree/master/indirect_display).
+此库使用 [这个项目](https://github.com/rustdesk-org/RustDeskIddDriver) 作为驱动程序。
 
 
-#### tested platforms
+**注意**：Win10 1607 之前的版本。尝试遵循 [这个方法](https://github.com/fanxiushu/xdisp_virt/tree/master/indirect_display)。
+
+
+#### 测试过的平台
 
 - [x] 19041
 - [x] 19043
 
-### win7
+### Win7
 
-TODO
+待办事项
 
-[WDDM](https://docs.microsoft.com/en-us/windows-hardware/drivers/display/windows-vista-display-driver-model-design-guide).
+[WDDM](https://docs.microsoft.com/en-us/windows-hardware/drivers/display/windows-vista-display-driver-model-design-guide)。
 
 ## X11
 

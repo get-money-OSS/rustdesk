@@ -8,17 +8,17 @@
 
 
 # enigo
-Cross platform input simulation in Rust!
+Rust 中的跨平台输入模拟！
 
-- [x] Linux (X11) mouse
-- [x] Linux (X11) text
-- [ ] Linux (Wayland) mouse
-- [ ] Linux (Wayland) text
-- [x] MacOS mouse
-- [x] MacOS text
-- [x] Win mouse
-- [x] Win text
-- [x] Custom Parser
+- [x] Linux (X11) 鼠标
+- [x] Linux (X11) 文本
+- [ ] Linux (Wayland) 鼠标
+- [ ] Linux (Wayland) 文本
+- [x] MacOS 鼠标
+- [x] MacOS 文本
+- [x] Win 鼠标
+- [x] Win 文本
+- [x] 自定义解析器
 
 
 ```Rust
@@ -29,17 +29,17 @@ enigo.mouse_click(MouseButton::Left);
 enigo.key_sequence_parse("{+CTRL}a{-CTRL}{+SHIFT}Hello World{-SHIFT}");
 ```
 
-for more look at examples
+更多示例请查看 examples
 
-Runtime dependencies
+运行时依赖
 --------------------
 
-Linux users may have to install libxdo-dev. For example, on Ubuntu:
+Linux 用户可能需要安装 libxdo-dev。例如，在 Ubuntu 上：
 
 ```Bash
 apt install libxdo-dev
 ```
-On Arch: 
+在 Arch 上：
 
 ```Bash
 pacman -S xdotool
